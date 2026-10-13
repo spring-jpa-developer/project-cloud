@@ -224,8 +224,8 @@ curl -X POST http://localhost:8080/api/members \
 
 **EC2 배포 후 헬스체크 확인:**
 
-- 퍼블릭 IP: `43.201.57.4:8080`
-- 엔드포인트: `http://43.201.57.4:8080/actuator/health`
+- 퍼블릭 IP: `<EC2 퍼블릭 IP>:8080`
+- 엔드포인트: `http://<EC2 퍼블릭 IP>:8080/actuator/health`
 
 ![Actuator Health 확인](img/health_check.png)
 
@@ -257,7 +257,7 @@ Spring Boot 실행 시 자동으로 주입받습니다.
                     └── TEAM-NAME       → 2조
 ```
 
-**Actuator Info 확인:** `http://43.201.57.4:8080/actuator/info`
+**Actuator Info 확인:** `http://<EC2 퍼블릭 IP>:8080/actuator/info`
 
 ```json
 {
@@ -363,8 +363,8 @@ S3 Presigned URL 방식 대신 **CloudFront**를 원본으로 하는 CDN 배포�
 OAC(Origin Access Control)를 사용해 S3에 직접 접근을 차단하고, CloudFront를 통해서만 이미지를 제공합니다.
 
 **CloudFront 배포 정보:**
-- 배포 도메인: `https://dnapymaa2h16i.cloudfront.net`
-- 원본(Origin): S3 버킷 (`cloud-project-prod-uploads`)
+- 배포 도메인: `https://<배포 도메인>.cloudfront.net`
+- 원본(Origin): S3 버킷 (`<S3 버킷명>`)
 - 원본 액세스: OAC (Origin Access Control) — S3 퍼블릭 접근 완전 차단
 
 **S3 버킷 정책 (OAC 전용 허용):**
@@ -374,10 +374,10 @@ OAC(Origin Access Control)를 사용해 S3에 직접 접근을 차단하고, Clo
     "Effect": "Allow",
     "Principal": { "Service": "cloudfront.amazonaws.com" },
     "Action": "s3:GetObject",
-    "Resource": "arn:aws:s3:::cloud-project-prod-uploads/*",
+    "Resource": "arn:aws:s3:::<S3 버킷명>/*",
     "Condition": {
       "StringEquals": {
-        "AWS:SourceArn": "arn:aws:cloudfront::883886327005:distribution/E2J4X00I7SPBTL"
+        "AWS:SourceArn": "arn:aws:cloudfront::<AWS 계정 ID>:distribution/<배포 ID>"
       }
     }
   }]
@@ -390,12 +390,12 @@ OAC(Origin Access Control)를 사용해 S3에 직접 접근을 차단하고, Clo
 
 **변경 전 (Presigned URL):**
 ```
-https://cloud-project-prod-uploads.s3.ap-northeast-2.amazonaws.com/uploads/uuid_file.png?X-Amz-...
+https://<S3 버킷명>.s3.ap-northeast-2.amazonaws.com/uploads/uuid_file.png?X-Amz-...
 ```
 
 **변경 후 (CloudFront URL):**
 ```
-https://dnapymaa2h16i.cloudfront.net/uploads/uuid_file.png
+https://<배포 도메인>.cloudfront.net/uploads/uuid_file.png
 ```
 
 CloudFront 도메인은 AWS Parameter Store `/cloud-project-app/prod/CLOUDFRONT_DOMAIN`에서 주입받습니다.
@@ -404,7 +404,7 @@ CloudFront 도메인은 AWS Parameter Store `/cloud-project-app/prod/CLOUDFRONT_
 
 > 실제 업로드된 프로필 사진 조회 URL:
 ```
-https://dnapymaa2h16i.cloudfront.net/uploads/ebee2fe2-98f1-412e-a124-c33ea8cbd7e4_test_Coverage.png
+https://<배포 도메인>.cloudfront.net/uploads/ebee2fe2-98f1-412e-a124-c33ea8cbd7e4_test_Coverage.png
 ```
 
 ---
@@ -468,5 +468,5 @@ https://dnapymaa2h16i.cloudfront.net/uploads/ebee2fe2-98f1-412e-a124-c33ea8cbd7e
 | 2 | RDS 분리, 보안 그룹 체이닝, Parameter Store | RDS, SSM | `GET /actuator/info` → 팀 이름 출력 |
 | 3 | S3 업로드, Presigned URL 발급 | S3, IAM Role | `GET /api/members/{id}/profile-image` |
 | 4 | Docker 컨테이너화, GitHub Actions CI/CD | Docker, Actions | 코드 Push → EC2 자동 반영 |
-| 5 | ALB + ASG + HTTPS 도메인 | ALB, ACM, Route 53 | `https://api.spring-jpa.dev` 접속 |
+| 5 | ALB + ASG + HTTPS 도메인 | ALB, ACM, Cloudflare DNS | `https://api.spring-jpa.dev` 접속 |
 | 6 | CloudFront CDN 구축, Presigned URL → CloudFront URL 전환 | CloudFront, OAC | `GET /api/members/{id}/profile-image` → `cloudfront.net` URL 반환 |
