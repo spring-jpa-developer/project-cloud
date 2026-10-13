@@ -468,5 +468,5 @@ https://<배포 도메인>.cloudfront.net/uploads/ebee2fe2-98f1-412e-a124-c33ea8
 | 2 | RDS 분리, 보안 그룹 체이닝, Parameter Store | RDS, SSM | `GET /actuator/info` → 팀 이름 출력 |
 | 3 | S3 업로드, Presigned URL 발급 | S3, IAM Role | `GET /api/members/{id}/profile-image` |
 | 4 | Docker 컨테이너화, GitHub Actions CI/CD | Docker, Actions | 코드 Push → EC2 자동 반영 |
-| 5 | ALB + ASG + HTTPS 도메인 | ALB, ACM, Cloudflare DNS | `https://api.spring-jpa.dev` 접속 |
+| 5 | ALB + ASG + HTTPS 도메인 | ALB, ACM, Route 53 | `https://api.spring-jpa.dev` 접속 |
 | 6 | CloudFront CDN 구축, Presigned URL → CloudFront URL 전환 | CloudFront, OAC | `GET /api/members/{id}/profile-image` → `cloudfront.net` URL 반환 |
